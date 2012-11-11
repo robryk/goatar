@@ -25,6 +25,10 @@ func (r *Reader) GetFile(f index.IndexEntry) (metadata *tar.Header, contents io.
 		err = ErrIndexMismatch
 		return
 	}
+	if metadata.Name != *f.Path {
+		err = ErrIndexMismatch
+		return
+	}
 	contents = tarReader
 	return
 }
@@ -79,6 +83,7 @@ func (w *Writer) Write(b []byte) (n int, err error) {
 
 func (w *Writer) Close() error {
 	w.finishFile()
+	w.fileOutput.Close()
 	return w.Writer.Close()
 }
 
@@ -100,7 +105,7 @@ func Index(r io.Reader, indexer index.Indexer) error {
 
 		hdr, err := tr.Next()
 		if err == io.EOF {
-			return nil
+			break
 		}
 		if err != nil {
 			return err
@@ -122,5 +127,7 @@ func Index(r io.Reader, indexer index.Indexer) error {
 			return err
 		}
 	}
-	panic("notreached")
+
+	indexer.Close()
+	return nil
 }
