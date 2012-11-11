@@ -16,6 +16,7 @@ var _ = math.Inf
 type File struct {
 	Path             *string `protobuf:"bytes,1,req,name=path" json:"path,omitempty"`
 	Offset           *int64  `protobuf:"varint,2,opt,name=offset" json:"offset,omitempty"`
+	Hash             []byte  `protobuf:"bytes,3,opt,name=hash" json:"hash,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 
@@ -35,6 +36,13 @@ func (this *File) GetOffset() int64 {
 		return *this.Offset
 	}
 	return 0
+}
+
+func (this *File) GetHash() []byte {
+	if this != nil {
+		return this.Hash
+	}
+	return nil
 }
 
 func init() {

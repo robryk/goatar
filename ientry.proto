@@ -3,6 +3,7 @@ package goatar;
 message File {
 	required string path = 1;
 	optional int64 offset = 2;
+	optional bytes hash = 3;
 }
 
 	

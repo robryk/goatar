@@ -3,6 +3,8 @@ package goatar
 import "errors"
 import "io"
 import "archive/tar"
+import "hash"
+import "crypto/sha256"
 
 //import "code.google.com/p/leveldb-go/leveldb/table"
 import "github.com/robryk/goutils/teller"
@@ -34,15 +36,16 @@ type Writer struct {
 	ioWriter    io.WriteSeeker
 	currentFile *File
 	fileOutput  func(*File)
+	hasher      hash.Hash
 }
 
 func NewWriter(w io.Writer, indexer func(*File)) *Writer {
 	ws := teller.NewWriter(w)
 	return &Writer{
-		Writer: tar.NewWriter(ws),
-		ioWriter: ws,
+		Writer:      tar.NewWriter(ws),
+		ioWriter:    ws,
 		currentFile: nil,
-		fileOutput: indexer,
+		fileOutput:  indexer,
 	}
 }
 
@@ -50,6 +53,10 @@ func (w *Writer) finishFile() {
 	if w.currentFile == nil {
 		return
 	}
+
+	w.currentFile.Hash = w.hasher.Sum(nil)
+	w.hasher = nil
+
 	w.fileOutput(w.currentFile)
 	w.currentFile = nil
 }
@@ -65,11 +72,15 @@ func (w *Writer) WriteHeader(hdr *tar.Header) error {
 		Path:   &hdr.Name,
 		Offset: &offset,
 	}
+	w.hasher = sha256.New()
 	return w.Writer.WriteHeader(hdr)
 }
 
-//func (w *Writer) Write(b []byte) (n int, err error) {
-//}
+func (w *Writer) Write(b []byte) (n int, err error) {
+	n, err = w.Writer.Write(b)
+	w.hasher.Write(b[:n])
+	return
+}
 
 func (w *Writer) Close() error {
 	w.finishFile()
