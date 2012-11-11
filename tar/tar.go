@@ -81,3 +81,46 @@ func (w *Writer) Close() error {
 	w.finishFile()
 	return w.Writer.Close()
 }
+
+const tarBlockSize = 512
+
+func Index(r io.Reader, indexer func(*index.File) error) error {
+	sr := teller.NewReader(r)
+	tr := tar.NewReader(sr)
+	for {
+		// This depends on the implementation of tar.Reader
+		// We want to find the exact offset of the beginning of the header. The offset we get before the header is read is at the end of the previous file's data (because we've read all of its data).
+		// Alas, tar pads files to multiples of block size and the padding is read only when Reader.Next() is invoked. So we get the offset of the end of the previous file's data and round up to
+		// a multiple of blockSize bytes.
+		offset, err := sr.Seek(1, 0)
+		if err != nil {
+			return err
+		}
+		offset = (offset + tarBlockSize - 1) & ^(tarBlockSize - 1)
+
+		hdr, err := tr.Next()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+
+		file := &index.File{
+			Path:   &hdr.Name,
+			Offset: &offset,
+		}
+		idx := index.NewIndexer(file)
+
+		_, err = io.Copy(idx, tr)
+		if err != nil {
+			return err
+		}
+
+		err = indexer(idx.Close())
+		if err != nil {
+			return err
+		}
+	}
+	panic("notreached")
+}
