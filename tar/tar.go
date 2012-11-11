@@ -14,7 +14,7 @@ type Reader struct {
 	r io.ReadSeeker
 }
 
-func (r *Reader) GetFile(f index.File) (metadata *tar.Header, contents io.Reader, err error) {
+func (r *Reader) GetFile(f index.IndexEntry) (metadata *tar.Header, contents io.Reader, err error) {
 	if f.Offset == nil {
 		err = ErrIncompleteIndex
 		return
@@ -33,10 +33,10 @@ type Writer struct {
 	*tar.Writer
 	ioWriter    io.WriteSeeker
 	currentFile *index.Indexer
-	fileOutput  func(*index.File)
+	fileOutput  func(*index.IndexEntry)
 }
 
-func NewWriter(w io.Writer, indexer func(*index.File)) *Writer {
+func NewWriter(w io.Writer, indexer func(*index.IndexEntry)) *Writer {
 	ws := teller.NewWriter(w)
 	return &Writer{
 		Writer:      tar.NewWriter(ws),
@@ -62,7 +62,7 @@ func (w *Writer) WriteHeader(hdr *tar.Header) error {
 		return err
 	}
 
-	nextFile := &index.File{
+	nextFile := &index.IndexEntry{
 		Path:   &hdr.Name,
 		Offset: &offset,
 	}
@@ -84,7 +84,7 @@ func (w *Writer) Close() error {
 
 const tarBlockSize = 512
 
-func Index(r io.Reader, indexer func(*index.File) error) error {
+func Index(r io.Reader, indexer func(*index.IndexEntry) error) error {
 	sr := teller.NewReader(r)
 	tr := tar.NewReader(sr)
 	for {
@@ -106,7 +106,7 @@ func Index(r io.Reader, indexer func(*index.File) error) error {
 			return err
 		}
 
-		file := &index.File{
+		file := &index.IndexEntry{
 			Path:   &hdr.Name,
 			Offset: &offset,
 		}

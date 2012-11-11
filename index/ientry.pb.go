@@ -13,32 +13,32 @@ var _ = proto.Marshal
 var _ = &json.SyntaxError{}
 var _ = math.Inf
 
-type File struct {
+type IndexEntry struct {
 	Path             *string `protobuf:"bytes,1,req,name=path" json:"path,omitempty"`
 	Offset           *int64  `protobuf:"varint,2,opt,name=offset" json:"offset,omitempty"`
 	Hash             []byte  `protobuf:"bytes,3,opt,name=hash" json:"hash,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 
-func (this *File) Reset()         { *this = File{} }
-func (this *File) String() string { return proto.CompactTextString(this) }
-func (*File) ProtoMessage()       {}
+func (this *IndexEntry) Reset()         { *this = IndexEntry{} }
+func (this *IndexEntry) String() string { return proto.CompactTextString(this) }
+func (*IndexEntry) ProtoMessage()       {}
 
-func (this *File) GetPath() string {
+func (this *IndexEntry) GetPath() string {
 	if this != nil && this.Path != nil {
 		return *this.Path
 	}
 	return ""
 }
 
-func (this *File) GetOffset() int64 {
+func (this *IndexEntry) GetOffset() int64 {
 	if this != nil && this.Offset != nil {
 		return *this.Offset
 	}
 	return 0
 }
 
-func (this *File) GetHash() []byte {
+func (this *IndexEntry) GetHash() []byte {
 	if this != nil {
 		return this.Hash
 	}
