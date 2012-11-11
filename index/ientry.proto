@@ -1,9 +1,7 @@
-package goatar;
+package index;
 
 message File {
 	required string path = 1;
 	optional int64 offset = 2;
 	optional bytes hash = 3;
 }
-
-	

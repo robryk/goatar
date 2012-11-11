@@ -1,4 +1,4 @@
-package goatar
+package tar
 
 import "archive/tar"
 import "crypto/sha256"
@@ -7,6 +7,7 @@ import "hash"
 import "io"
 
 import "github.com/robryk/goutils/teller"
+import "github.com/robryk/goatar/index"
 
 var ErrIndexMismatch = errors.New("goatar: supplied index entry doesn't match the tar file")
 var ErrIncompleteIndex = errors.New("goatar: supplied index entry is incomplete")
@@ -15,7 +16,7 @@ type Reader struct {
 	r io.ReadSeeker
 }
 
-func (r *Reader) GetFile(f File) (metadata *tar.Header, contents io.Reader, err error) {
+func (r *Reader) GetFile(f index.File) (metadata *tar.Header, contents io.Reader, err error) {
 	if f.Offset == nil {
 		err = ErrIncompleteIndex
 		return
@@ -33,12 +34,12 @@ func (r *Reader) GetFile(f File) (metadata *tar.Header, contents io.Reader, err 
 type Writer struct {
 	*tar.Writer
 	ioWriter    io.WriteSeeker
-	currentFile *File
-	fileOutput  func(*File)
+	currentFile *index.File
+	fileOutput  func(*index.File)
 	hasher      hash.Hash
 }
 
-func NewWriter(w io.Writer, indexer func(*File)) *Writer {
+func NewWriter(w io.Writer, indexer func(*index.File)) *Writer {
 	ws := teller.NewWriter(w)
 	return &Writer{
 		Writer:      tar.NewWriter(ws),
@@ -67,7 +68,7 @@ func (w *Writer) WriteHeader(hdr *tar.Header) error {
 	if err != nil {
 		return err
 	}
-	w.currentFile = &File{
+	w.currentFile = &index.File{
 		Path:   &hdr.Name,
 		Offset: &offset,
 	}

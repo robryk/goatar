@@ -2,7 +2,7 @@
 // source: ientry.proto
 // DO NOT EDIT!
 
-package goatar
+package index
 
 import proto "code.google.com/p/goprotobuf/proto"
 import json "encoding/json"
