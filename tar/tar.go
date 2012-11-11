@@ -32,7 +32,7 @@ func (r *Reader) GetFile(f index.IndexEntry) (metadata *tar.Header, contents io.
 type Writer struct {
 	*tar.Writer
 	ioWriter    io.WriteSeeker
-	currentFile *index.Indexer
+	currentFile *index.Extractor
 	fileOutput  func(*index.IndexEntry)
 }
 
@@ -66,7 +66,7 @@ func (w *Writer) WriteHeader(hdr *tar.Header) error {
 		Path:   &hdr.Name,
 		Offset: &offset,
 	}
-	w.currentFile = index.NewIndexer(nextFile)
+	w.currentFile = index.NewExtractor(nextFile)
 
 	return w.Writer.WriteHeader(hdr)
 }
@@ -110,14 +110,14 @@ func Index(r io.Reader, indexer func(*index.IndexEntry) error) error {
 			Path:   &hdr.Name,
 			Offset: &offset,
 		}
-		idx := index.NewIndexer(file)
+		extractor := index.NewExtractor(file)
 
-		_, err = io.Copy(idx, tr)
+		_, err = io.Copy(extractor, tr)
 		if err != nil {
 			return err
 		}
 
-		err = indexer(idx.Close())
+		err = indexer(extractor.Close())
 		if err != nil {
 			return err
 		}
