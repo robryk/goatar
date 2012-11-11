@@ -1,9 +1,7 @@
 package tar
 
 import "archive/tar"
-import "crypto/sha256"
 import "errors"
-import "hash"
 import "io"
 
 import "github.com/robryk/goutils/teller"
@@ -34,9 +32,8 @@ func (r *Reader) GetFile(f index.File) (metadata *tar.Header, contents io.Reader
 type Writer struct {
 	*tar.Writer
 	ioWriter    io.WriteSeeker
-	currentFile *index.File
+	currentFile *index.Indexer
 	fileOutput  func(*index.File)
-	hasher      hash.Hash
 }
 
 func NewWriter(w io.Writer, indexer func(*index.File)) *Writer {
@@ -54,11 +51,7 @@ func (w *Writer) finishFile() {
 		return
 	}
 
-	w.currentFile.Hash = w.hasher.Sum(nil)
-	w.hasher = nil
-
-	w.fileOutput(w.currentFile)
-	w.currentFile = nil
+	w.fileOutput(w.currentFile.Close())
 }
 
 func (w *Writer) WriteHeader(hdr *tar.Header) error {
@@ -68,17 +61,19 @@ func (w *Writer) WriteHeader(hdr *tar.Header) error {
 	if err != nil {
 		return err
 	}
-	w.currentFile = &index.File{
+
+	nextFile := &index.File{
 		Path:   &hdr.Name,
 		Offset: &offset,
 	}
-	w.hasher = sha256.New()
+	w.currentFile = index.NewIndexer(nextFile)
+
 	return w.Writer.WriteHeader(hdr)
 }
 
 func (w *Writer) Write(b []byte) (n int, err error) {
 	n, err = w.Writer.Write(b)
-	w.hasher.Write(b[:n])
+	w.currentFile.Write(b[:n])
 	return
 }
 
