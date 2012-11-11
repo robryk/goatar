@@ -1,12 +1,11 @@
 package goatar
 
-import "errors"
-import "io"
 import "archive/tar"
-import "hash"
 import "crypto/sha256"
+import "errors"
+import "hash"
+import "io"
 
-//import "code.google.com/p/leveldb-go/leveldb/table"
 import "github.com/robryk/goutils/teller"
 
 var ErrIndexMismatch = errors.New("goatar: supplied index entry doesn't match the tar file")
