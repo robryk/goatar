@@ -26,3 +26,7 @@ func (si *SimpleIndexer) Index(f *IndexEntry) error {
 	_, err = w.Write(output)
 	return err
 }
+
+func (si *SimpleIndexer) Close() error {
+	return (*record.Writer)(si).Close()
+}

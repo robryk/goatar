@@ -18,3 +18,7 @@ func (di DebugIndexer) Index(ie *IndexEntry) error {
 	}
 	return nil
 }
+
+func (di DebugIndexer) Close() error {
+	return nil
+}
