@@ -57,7 +57,7 @@ func (w *Writer) finishFile() {
 func (w *Writer) WriteHeader(hdr *tar.Header) error {
 	w.finishFile()
 	w.Flush()
-	offset, err := w.ioWriter.Seek(1, 0)
+	offset, err := w.ioWriter.Seek(0, 1)
 	if err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func Index(r io.Reader, indexer index.Indexer) error {
 		// We want to find the exact offset of the beginning of the header. The offset we get before the header is read is at the end of the previous file's data (because we've read all of its data).
 		// Alas, tar pads files to multiples of block size and the padding is read only when Reader.Next() is invoked. So we get the offset of the end of the previous file's data and round up to
 		// a multiple of blockSize bytes.
-		offset, err := sr.Seek(1, 0)
+		offset, err := sr.Seek(0, 1)
 		if err != nil {
 			return err
 		}
