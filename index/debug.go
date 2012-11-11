@@ -12,6 +12,9 @@ func NewDebugIndexer(w io.Writer) DebugIndexer {
 }
 
 func (di DebugIndexer) Index(ie *IndexEntry) error {
-	_, err := fmt.Fprintf(di.Writer, "File %v begins at %v\n", ie.Path, ie.Offset)
-	return err
+	if ie.Offset != nil {
+		_, err := fmt.Fprintf(di.Writer, "File %v begins at %v\n", *ie.Path, *ie.Offset)
+		return err
+	}
+	return nil
 }
