@@ -33,10 +33,10 @@ type Writer struct {
 	*tar.Writer
 	ioWriter    io.WriteSeeker
 	currentFile *index.Extractor
-	fileOutput  func(*index.IndexEntry)
+	fileOutput  index.Indexer
 }
 
-func NewWriter(w io.Writer, indexer func(*index.IndexEntry)) *Writer {
+func NewWriter(w io.Writer, indexer index.Indexer) *Writer {
 	ws := teller.NewWriter(w)
 	return &Writer{
 		Writer:      tar.NewWriter(ws),
@@ -51,7 +51,7 @@ func (w *Writer) finishFile() {
 		return
 	}
 
-	w.fileOutput(w.currentFile.Close())
+	w.fileOutput.Index(w.currentFile.Close())
 }
 
 func (w *Writer) WriteHeader(hdr *tar.Header) error {
@@ -84,7 +84,7 @@ func (w *Writer) Close() error {
 
 const tarBlockSize = 512
 
-func Index(r io.Reader, indexer func(*index.IndexEntry) error) error {
+func Index(r io.Reader, indexer index.Indexer) error {
 	sr := teller.NewReader(r)
 	tr := tar.NewReader(sr)
 	for {
@@ -117,7 +117,7 @@ func Index(r io.Reader, indexer func(*index.IndexEntry) error) error {
 			return err
 		}
 
-		err = indexer(extractor.Close())
+		err = indexer.Index(extractor.Close())
 		if err != nil {
 			return err
 		}
